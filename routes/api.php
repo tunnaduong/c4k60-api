@@ -4,6 +4,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\SponsorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -55,4 +56,6 @@ Route::prefix('v2.0')->group(function () {
     Route::get('/chat/online', [ChatController::class, 'getActivity']);
 
     Route::get('/calendar/list', [CalendarController::class, 'getCalendarEvents']);
+
+    Route::get('/sponsors', [SponsorController::class, 'index']);
 });
