@@ -7,6 +7,7 @@ use App\Models\Chat;
 use App\Models\User;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -229,5 +230,61 @@ class ChatController extends Controller
                 'message' => $e->getMessage(),
             ], 400);
         }
+    }
+
+    public function getLastMessage(Request $request)
+    {
+        try {
+            // Validate the request parameters
+            $validatedData = $request->validate([
+                'user_from' => 'nullable|string',
+                'user_to' => 'nullable|string',
+                'type' => 'nullable|string|in:group,private',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
+
+        $userFrom = $validatedData['user_from'] ?? null;
+        $userTo = $validatedData['user_to'] ?? null;
+        $type = $validatedData['type'] ?? null;
+
+        if ($type === "group") {
+            // Fetch the latest message for the group
+            $message = DB::table('chat')
+                ->where('user_to', 'class_group')
+                ->orderByDesc('id')
+                ->first();
+
+            return response()->json($message ? [$message] : [], 200, [], JSON_UNESCAPED_UNICODE);
+        }
+
+        // Fetch the latest private message between the users
+        $message = DB::table('chat')
+            ->where('user_to', '!=', 'class_group')
+            ->where(function ($query) use ($userFrom, $userTo) {
+                $query->where(function ($q) use ($userFrom, $userTo) {
+                    $q->where('user_from', $userFrom)
+                        ->where('user_to', $userTo);
+                })->orWhere(function ($q) use ($userFrom, $userTo) {
+                    $q->where('user_from', $userTo)
+                        ->where('user_to', $userFrom);
+                });
+            })
+            ->orderByDesc('id')
+            ->first();
+
+        return response()->json($message ? [$message] : [], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getActivity()
+    {
+        // Fetch users sorted by last_activity in descending order
+        $users = DB::table('c4_user')
+            ->select('username', 'name', 'last_activity')
+            ->orderByDesc('last_activity')
+            ->get();
+
+        return response()->json($users, 200, [], JSON_UNESCAPED_UNICODE);
     }
 }
