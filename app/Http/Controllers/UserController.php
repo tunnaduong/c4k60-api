@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -89,5 +90,45 @@ class UserController extends Controller
                 'message' => 'Username cannot be blank!',
             ], 400, [], JSON_UNESCAPED_UNICODE);
         }
+    }
+
+    public function getUserInfo(Request $request)
+    {
+        // Validate input data
+        try {
+            $validatedData = $request->validate([
+                'username' => 'required|string'
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
+
+        // Retrieve user info from database
+        $user = User::where('username', $validatedData['username'])->first();
+
+        // Check if user exists
+        if ($user) {
+            $dob = $user->dayofbirth . '/' . $user->monthofbirth . '/' . $user->yearofbirth;
+            $response = [
+                'code' => 200,
+                'message' => 'Successfully retrieved user\'s info!',
+                'info' => [
+                    'username' => $user->username,
+                    'full_name' => $user->name,
+                    'first_name' => $user->firstname,
+                    'last_name' => $user->lastname,
+                    'date_of_birth' => $dob,
+                    'role' => $user->role,
+                    'gender' => $user->gender,
+                ]
+            ];
+        } else {
+            $response = [
+                'code' => 400,
+                'message' => 'No account found!',
+            ];
+        }
+
+        return response()->json($response);
     }
 }

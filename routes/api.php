@@ -28,6 +28,7 @@ use App\Http\Controllers\NotificationController;
 Route::prefix('v2.0')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 
+    Route::any('/users', [UserController::class, 'getUserInfo']);
     Route::get('/users/avatar/{username}', [UserController::class, 'getAvatar']);
     Route::get('/users/birthday', [BirthdayController::class, 'index']);
     Route::get('/users/list', [UserController::class, 'index']);
