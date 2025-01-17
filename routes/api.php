@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\GalleryController;
@@ -58,4 +59,7 @@ Route::prefix('v2.0')->group(function () {
     Route::get('/calendar/list', [CalendarController::class, 'getCalendarEvents']);
 
     Route::get('/sponsors', [SponsorController::class, 'index']);
+
+    Route::get('/changelogs', [ChangelogController::class, 'index']);
+    Route::get('/changelogs/latest', [ChangelogController::class, 'latest']);
 });
