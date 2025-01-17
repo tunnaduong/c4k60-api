@@ -32,10 +32,10 @@ Route::get('/users/online', [UserController::class, 'updateLastActivity']);
 Route::get('/radio/idle', [LiveRadioController::class, 'getIdlePlaylist']);
 Route::any('/radio/chatlogs', [LiveRadioController::class, 'handleLogs']);
 
-Route::any('/notifications/image', [NotificationController::class, 'getImages']);
-Route::get('/notifications/list', [NotificationController::class, 'getNotifications']);
-Route::any('/notifications/token', [NotificationController::class, 'updateToken']);
-Route::get('/notifications/send', [NotificationController::class, 'sendNotification']);
+Route::any('/notification/image', [NotificationController::class, 'getImages']);
+Route::get('/notification/list', [NotificationController::class, 'getNotifications']);
+Route::any('/notification/token', [NotificationController::class, 'updateToken']);
+Route::get('/notification/send', [NotificationController::class, 'sendNotification']);
 
 Route::get('/gallery', [GalleryController::class, 'index']);
 Route::get('/gallery/photos', [GalleryController::class, 'getPhotos']);
