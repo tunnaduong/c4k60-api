@@ -31,7 +31,7 @@ class FeedController extends Controller
             ->map(function ($post) {
                 // Fetch the author details from the User model/table
                 $author = DB::table('c4_user')
-                    ->select('name', 'verified', 'avatar')
+                    ->select('name', 'verified', 'avatar', 'username')
                     ->where('username', $post->username) // Adjust 'user_id' based on your schema
                     ->first();
 
@@ -41,6 +41,7 @@ class FeedController extends Controller
                     'timeofpost' => $post->timeofpost,
                     'author' => $author ? [
                         'name' => $author->name,
+                        'username' => $author->username,
                         'verified' => $author->verified,
                         'avatar' => $author->avatar,
                     ] : null, // Handle cases where the author might be missing
