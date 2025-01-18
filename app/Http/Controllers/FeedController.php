@@ -11,7 +11,7 @@ class FeedController extends Controller
     public function index(Request $request)
     {
         // Define the items per page
-        $itemsPerPage = 4;
+        $itemsPerPage = 7;
 
         // Get the current page or default to 1
         $page = $request->query('page', 1);
