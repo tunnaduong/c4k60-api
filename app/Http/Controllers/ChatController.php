@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Intervention\Image\Facades\Image;
 
 class ChatController extends Controller
 {
@@ -167,7 +168,7 @@ class ChatController extends Controller
     }
 
     /**
-     * Handle chat image upload and message insertion.
+     * Handle chat image upload with compression and message insertion.
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -190,16 +191,23 @@ class ChatController extends Controller
             $fromId = $validatedData['user_from'];
             $type = $validatedData['type'];
 
-            // Handle image upload
+            // Handle image upload with compression
             $image = $request->file('image');
             $imageName = time() . '_' . $image->getClientOriginalName();
-            $imagePath = $image->storeAs('public/chats', $imageName);
+
+            // Define storage path
+            $imagePath = storage_path('app/public/chats/' . $imageName);
+
+            // Compress and save the image
+            $compressedImage = Image::make($image->getRealPath())
+                ->encode('jpg', 60) // Compress image to 60% quality
+                ->save($imagePath);
 
             // Insert into chat table
             $chat = new Chat();
             $chat->user_from = $fromId;
             $chat->user_to = $toId;
-            $chat->image_url = Storage::url($imagePath);
+            $chat->image_url = Storage::url('public/chats/' . $imageName);
             $chat->type = $type;
             $chat->save();
 
@@ -221,7 +229,7 @@ class ChatController extends Controller
 
             return response()->json([
                 'status' => '200',
-                'message' => 'Image uploaded and message inserted successfully',
+                'message' => 'Image uploaded, compressed, and message inserted successfully',
             ], 200);
 
         } catch (\Exception $e) {
