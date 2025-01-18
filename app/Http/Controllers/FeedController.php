@@ -22,12 +22,30 @@ class FeedController extends Controller
         // Calculate the offset
         $offset = ($page - 1) * $itemsPerPage;
 
-        // Fetch paginated results
+        // Fetch paginated results with author details
         $posts = DB::table('tintuc_posts')
             ->orderBy('timeofpost', 'desc')
             ->limit($itemsPerPage)
             ->offset($offset)
-            ->get();
+            ->get()
+            ->map(function ($post) {
+                // Fetch the author details from the User model/table
+                $author = DB::table('c4_user')
+                    ->select('name', 'verified', 'avatar')
+                    ->where('username', $post->username) // Adjust 'user_id' based on your schema
+                    ->first();
+
+                return [
+                    'id' => $post->id,
+                    'content' => $post->content,
+                    'timeofpost' => $post->timeofpost,
+                    'author' => $author ? [
+                        'name' => $author->name,
+                        'verified' => $author->verified,
+                        'avatar' => $author->avatar,
+                    ] : null, // Handle cases where the author might be missing
+                ];
+            });
 
         // Prepare the response
         return response()->json([
@@ -37,6 +55,7 @@ class FeedController extends Controller
             'items' => $posts,
         ], 200, [], JSON_UNESCAPED_UNICODE);
     }
+
 
     public function handleLikes(Request $request)
     {
