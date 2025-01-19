@@ -144,7 +144,7 @@ class ChatController extends Controller
                 ->orderBy('updated_at', 'desc')
                 ->get();
 
-            // Fetch details for each user in the conversation
+            // Prepare conversation data with last chat details
             $conversationData = [];
             foreach ($conversations as $conversation) {
                 // Get the other user in the conversation
@@ -153,7 +153,38 @@ class ChatController extends Controller
                 // Retrieve user data
                 $userDetails = User::where('username', $otherUser)->first();
                 if ($userDetails) {
-                    $conversationData[] = $userDetails;
+                    // Fetch the last chat in the conversation
+                    $lastChat = DB::table('chat')
+                        ->where(function ($query) use ($user, $otherUser) {
+                            $query->where('user_from', $user)
+                                ->where('user_to', $otherUser);
+                        })
+                        ->orWhere(function ($query) use ($user, $otherUser) {
+                            $query->where('user_from', $otherUser)
+                                ->where('user_to', $user);
+                        })
+                        ->orderBy('time', 'desc') // Order by time to get the most recent chat
+                        ->first();
+
+                    // Add the conversation details along with the last chat
+                    $conversationData[] = [
+                        'username' => $userDetails->username,
+                        'name' => $userDetails->name,
+                        'lastname' => $userDetails->lastname,
+                        'avatar' => $userDetails->avatar,
+                        'last_activity' => $userDetails->last_activity,
+                        'last_chat' => $lastChat ? [
+                            'id' => $lastChat->id,
+                            'message' => $lastChat->message,
+                            'user_from' => $lastChat->user_from,
+                            'user_to' => $lastChat->user_to,
+                            'image_url' => $lastChat->image_url,
+                            'time' => $lastChat->time,
+                            'type' => $lastChat->type,
+                            'sent' => $lastChat->sent,
+                            'received' => $lastChat->received,
+                        ] : null, // If no last chat exists
+                    ];
                 }
             }
 
@@ -166,6 +197,7 @@ class ChatController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Handle chat image upload with compression and message insertion.
