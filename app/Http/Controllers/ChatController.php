@@ -289,7 +289,7 @@ class ChatController extends Controller
     {
         // Fetch users sorted by last_activity in descending order
         $users = DB::table('c4_user')
-            ->select('username', 'name', 'last_activity')
+            ->select('username', 'name', 'lastname', 'last_activity')
             ->orderByDesc('last_activity')
             ->get();
 
