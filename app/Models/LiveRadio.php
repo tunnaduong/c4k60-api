@@ -13,6 +13,8 @@ class LiveRadio extends Model
     protected $table = 'live_radio_idle_playlist';
     protected $fillable = []; // Default to an empty array
 
+    protected $timestamps = false;
+
     public function setTableAndFillable($table, array $fillableColumns)
     {
         $this->table = $table;
