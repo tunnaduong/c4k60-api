@@ -119,7 +119,7 @@ class FeedController extends Controller
             // Insert the new post into the database
             $postId = DB::table('tintuc_posts')->insertGetId([
                 'content' => $validatedData['content'],
-                'image' => $imageName ? $imageName : null,
+                'image' => $imageName ?? null ? $imageName : null,
                 'username' => $validatedData['username'],
                 'timeofpost' => now(),
             ]);
