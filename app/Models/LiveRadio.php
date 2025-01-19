@@ -12,8 +12,7 @@ class LiveRadio extends Model
     // Set a default table name if needed
     protected $table = 'live_radio_idle_playlist';
     protected $fillable = []; // Default to an empty array
-
-    protected $timestamps = false;
+    public $timestamps = false;
 
     public function setTableAndFillable($table, array $fillableColumns)
     {
