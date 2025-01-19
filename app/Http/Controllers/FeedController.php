@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class FeedController extends Controller
@@ -79,6 +81,62 @@ class FeedController extends Controller
             'page' => (int) $page,
             'items' => $posts,
         ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Add a new feed post to the tintuc_posts table.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function addPost(Request $request)
+    {
+        // Validate incoming request data
+        try {
+            $validatedData = $request->validate([
+                'content' => 'required|string',
+                'image' => 'nullable|file|mimes:jpg,jpeg,png,gif|max:10240', // max 10MB
+                'username' => 'required|string',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
+
+        try {
+            // Handle image upload if exists
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = time() . '_' . $image->getClientOriginalName();
+
+                // Use Intervention Image to compress the image to 60% quality
+                $imageInstance = Image::make($image);
+                $imageInstance->save(storage_path('app/public/feed/' . $imageName), 60); // Save with 60% quality
+
+                $imagePath = 'public/posts/' . $imageName; // Save the image path
+            }
+
+            // Insert the new post into the database
+            $postId = DB::table('tintuc_posts')->insertGetId([
+                'content' => $validatedData['content'],
+                'image' => $imageName ? $imageName : null,
+                'username' => $validatedData['username'],
+                'timeofpost' => now(),
+            ]);
+
+            // Respond with success and the newly created post ID
+            return response()->json([
+                'code' => 200,
+                'message' => 'Post added successfully.',
+                'post_id' => $postId,
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle errors
+            return response()->json([
+                'code' => 500,
+                'message' => 'Error adding post: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
 
