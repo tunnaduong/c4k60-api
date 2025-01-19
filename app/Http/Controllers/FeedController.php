@@ -39,6 +39,7 @@ class FeedController extends Controller
                     'id' => $post->id,
                     'content' => $post->content,
                     'timeofpost' => $post->timeofpost,
+                    'image' => $post->image,
                     'author' => $author ? [
                         'name' => $author->name,
                         'username' => $author->username,
