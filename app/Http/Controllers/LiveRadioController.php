@@ -105,7 +105,8 @@ class LiveRadioController extends Controller
         $logs = (new LiveRadio())->setTableAndFillable(
             'live_radio_logs',
             ['id', 'created_by', 'msg_type', 'msg', 'thumbnail', 'time']
-        )->skip(($page - 1) * $itemsPerPage)
+        )->orderBy('id', 'desc')
+            ->skip(($page - 1) * $itemsPerPage)
             ->take($itemsPerPage)
             ->get();
 
