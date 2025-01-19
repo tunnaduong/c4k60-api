@@ -35,6 +35,28 @@ class FeedController extends Controller
                     ->where('username', $post->username) // Adjust 'user_id' based on your schema
                     ->first();
 
+                $likes = DB::table('tintuc_post_likes')
+                    ->where('liked_post_id', $post->id)
+                    ->get()
+                    ->map(function ($like) {
+                        $user = DB::table('c4_user')
+                            ->select('name as full_name', 'lastname as last_name', 'avatar')
+                            ->where('username', $like->liked_username)
+                            ->first();
+
+                        return [
+                            'like_id' => $like->like_id,
+                            'liked_username' => $like->liked_username,
+                            'time_of_like' => $like->time_of_like,
+                            'liked_post_id' => $like->liked_post_id,
+                            'user_detail' => $user ? [
+                                'full_name' => $user->full_name,
+                                'last_name' => $user->last_name,
+                                'avatar' => $user->avatar,
+                            ] : null, // Handle cases where user might not exist
+                        ];
+                    });
+
                 return [
                     'id' => $post->id,
                     'content' => $post->content,
@@ -46,6 +68,7 @@ class FeedController extends Controller
                         'verified' => $author->verified,
                         'avatar' => $author->avatar,
                     ] : null, // Handle cases where the author might be missing
+                    'likes' => $likes->toArray(),
                 ];
             });
 
