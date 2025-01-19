@@ -94,7 +94,7 @@ class FeedController extends Controller
         // Validate incoming request data
         try {
             $validatedData = $request->validate([
-                'content' => 'required|string',
+                'content' => 'nullable|string',
                 'image' => 'nullable|file|mimes:jpg,jpeg,png,gif|max:10240', // max 10MB
                 'username' => 'required|string',
             ]);
