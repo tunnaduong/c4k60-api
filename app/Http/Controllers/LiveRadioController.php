@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LiveRadio;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class LiveRadioController extends Controller
 {
@@ -57,12 +58,16 @@ class LiveRadioController extends Controller
      */
     private function createLog(Request $request)
     {
-        $validated = $request->validate([
-            'by' => 'required|string',
-            'msg_type' => 'required|string',
-            'message' => 'required|string',
-            'thumbnail' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'by' => 'required|string',
+                'msg_type' => 'required|string',
+                'message' => 'required|string',
+                'thumbnail' => 'nullable|string',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
 
         $log = (new LiveRadio())->setTableAndFillable(
             'live_radio_logs',
