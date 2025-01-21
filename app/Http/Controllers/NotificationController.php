@@ -228,7 +228,7 @@ class NotificationController extends Controller
             $tokens = explode(',', $user->expo_push_notification_token);
             foreach ($tokens as $token) {
                 if (!empty($token)) {
-                    $this->sendPushNotification($token, $title, $body);
+                    $this->sendPushNotification($token, $title, $body, $data);
                 }
             }
 
