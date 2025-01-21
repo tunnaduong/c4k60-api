@@ -36,7 +36,7 @@ class FeedController extends Controller
             // Fetch comments for the post
             $comments = DB::table('tintuc_post_comments')
                 ->where('post_id', $post->id)
-                ->orderBy('created_at', 'asc')
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($comment) {
                     // Fetch user details for each comment
