@@ -204,6 +204,7 @@ class NotificationController extends Controller
                 'to' => 'required|string',
                 'title' => 'required|string',
                 'body' => 'required|string',
+                'data' => 'nullable|string'
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
@@ -212,6 +213,7 @@ class NotificationController extends Controller
         $to = $validated['to'];
         $title = $validated['title'];
         $body = $validated['body'];
+        $data = $validated['data'];
 
         // If 'to' is not ALL, send notification to specific user
         if ($to !== 'ALL') {
@@ -248,7 +250,7 @@ class NotificationController extends Controller
             $tokens = explode(',', $user->expo_push_notification_token);
             foreach ($tokens as $token) {
                 if (!empty($token)) {
-                    $this->sendPushNotification($token, $title, $body, false);
+                    $this->sendPushNotification($token, $title, $body, $data, false);
                 }
             }
         }
@@ -258,7 +260,7 @@ class NotificationController extends Controller
         ]);
     }
 
-    private function sendPushNotification($to, $title, $body, $return = true)
+    private function sendPushNotification($to, $title, $body, $data, $return = true)
     {
         $url = "https://exp.host/--/api/v2/push/send";
 
@@ -267,6 +269,7 @@ class NotificationController extends Controller
             "sound" => "default",
             "title" => $title,
             "body" => $body,
+            "data" => $data
         ];
 
         $jsonMessage = json_encode($message);

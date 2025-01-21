@@ -40,7 +40,7 @@ Route::prefix('v2.0')->group(function () {
     Route::any('/notification/image', [NotificationController::class, 'getImages']);
     Route::get('/notification/list', [NotificationController::class, 'getNotifications']);
     Route::any('/notification/token', [NotificationController::class, 'updateToken']);
-    Route::get('/notification/send', [NotificationController::class, 'sendNotification']);
+    Route::any('/notification/send', [NotificationController::class, 'sendNotification']);
 
     Route::get('/gallery', [GalleryController::class, 'index']);
     Route::get('/gallery/photos', [GalleryController::class, 'getPhotos']);
