@@ -129,7 +129,7 @@ class FeedController extends Controller
                 $image = $request->file('image');
 
                 // Compress image to 60%
-                $imageName = time() . '_' . $image->getClientOriginalName();
+                $imageName = 'feed_comment_' . $image->getClientOriginalName();
 
                 // Use Intervention Image to compress the image to 60% quality
                 $imageInstance = Image::make($image);
