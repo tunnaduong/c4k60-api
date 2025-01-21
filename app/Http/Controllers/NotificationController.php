@@ -204,7 +204,7 @@ class NotificationController extends Controller
                 'to' => 'required|string',
                 'title' => 'required|string',
                 'body' => 'required|string',
-                'data' => 'nullable|string'
+                'data' => 'nullable|object',
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
