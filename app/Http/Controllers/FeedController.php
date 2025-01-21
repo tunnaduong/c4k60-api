@@ -130,11 +130,10 @@ class FeedController extends Controller
 
                 // Compress image to 60%
                 $imageName = time() . '_' . $image->getClientOriginalName();
-                $imagePath = storage_path('app/public/comments/' . $imageName);
 
-                Image::make($image)
-                    ->encode('jpg', 60) // Compress to 60% quality
-                    ->save($imagePath);
+                // Use Intervention Image to compress the image to 60% quality
+                $imageInstance = Image::make($image);
+                $imageInstance->save(storage_path('app/public/comments/' . $imageName), 60); // Save with 60% quality
             }
 
             // Insert the comment into the database
@@ -182,7 +181,6 @@ class FeedController extends Controller
 
         try {
             // Handle image upload if exists
-            $imagePath = null;
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 $imageName = time() . '_' . $image->getClientOriginalName();
@@ -190,8 +188,6 @@ class FeedController extends Controller
                 // Use Intervention Image to compress the image to 60% quality
                 $imageInstance = Image::make($image);
                 $imageInstance->save(storage_path('app/public/feed/' . $imageName), 60); // Save with 60% quality
-
-                $imagePath = 'public/posts/' . $imageName; // Save the image path
             }
 
             // Insert the new post into the database
