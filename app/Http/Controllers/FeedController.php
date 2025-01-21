@@ -123,8 +123,7 @@ class FeedController extends Controller
         }
 
         try {
-            $imageUrl = null;
-
+            $imageName = null;
             // Handle image upload if provided
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
@@ -136,8 +135,6 @@ class FeedController extends Controller
                 Image::make($image)
                     ->encode('jpg', 60) // Compress to 60% quality
                     ->save($imagePath);
-
-                $imageUrl = Storage::url('public/comments/' . $imageName);
             }
 
             // Insert the comment into the database
@@ -145,7 +142,7 @@ class FeedController extends Controller
                 'post_id' => $request->input('post_id'),
                 'username' => $request->input('username'),
                 'content' => $request->input('content'),
-                'image' => $imageUrl,
+                'image' => $imageName,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
