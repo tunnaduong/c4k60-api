@@ -45,7 +45,39 @@ class NotificationController extends Controller
 
     public function getNotifications(Request $request)
     {
-        if ($request->has('show') && $request->get('show') == 'all') {
+        $show = $request->get('show');
+
+        if (is_numeric($show)) {
+            // Fetch a specific notification by ID
+            $notification = Notification::find($show);
+
+            if (!$notification) {
+                return response()->json([
+                    'code' => 404,
+                    'message' => 'Notification not found.'
+                ], 404);
+            }
+
+            // Format images
+            $images = explode(",", $notification->image);
+            $formattedImages = [];
+            foreach ($images as $index => $image) {
+                $formattedImages[] = [
+                    'img_id' => $index + 1,
+                    'url' => $image
+                ];
+            }
+
+            // Return the specific notification
+            return response()->json([
+                'id' => $notification->id,
+                'title' => $notification->title,
+                'content' => $notification->content,
+                'createdBy' => $notification->createdBy,
+                'image' => $formattedImages,
+                'date' => $notification->date
+            ], 200);
+        } elseif ($show == 'all') {
             // Get all notifications
             $notifications = Notification::orderBy('id', 'desc')->get();
             $totalNotification = Notification::count();
