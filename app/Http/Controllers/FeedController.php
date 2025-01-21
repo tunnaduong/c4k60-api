@@ -6,81 +6,162 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class FeedController extends Controller
 {
     public function index(Request $request)
     {
-        // Define the items per page
+        // Define items per page and current page
         $itemsPerPage = 7;
-
-        // Get the current page or default to 1
         $page = $request->query('page', 1);
-
-        // Calculate the total number of items
-        $totalItems = DB::table('tintuc_posts')->count();
-
-        // Calculate the offset
         $offset = ($page - 1) * $itemsPerPage;
 
-        // Fetch paginated results with author details
+        // Fetch posts with pagination
         $posts = DB::table('tintuc_posts')
             ->orderBy('timeofpost', 'desc')
-            ->limit($itemsPerPage)
             ->offset($offset)
-            ->get()
-            ->map(function ($post) {
-                // Fetch the author details from the User model/table
-                $author = DB::table('c4_user')
-                    ->select('name', 'verified', 'avatar', 'username')
-                    ->where('username', $post->username) // Adjust 'user_id' based on your schema
-                    ->first();
+            ->limit($itemsPerPage)
+            ->get();
 
-                $likes = DB::table('tintuc_post_likes')
-                    ->where('liked_post_id', $post->id)
-                    ->get()
-                    ->map(function ($like) {
-                        $user = DB::table('c4_user')
-                            ->select('name as full_name', 'lastname as last_name', 'avatar')
-                            ->where('username', $like->liked_username)
-                            ->first();
+        // Map posts to include additional details
+        $response = $posts->map(function ($post) {
+            // Fetch author details
+            $author = DB::table('c4_user')
+                ->select('name', 'username', 'verified', 'avatar')
+                ->where('username', $post->username)
+                ->first();
 
-                        return [
-                            'like_id' => $like->like_id,
-                            'liked_username' => $like->liked_username,
-                            'time_of_like' => $like->time_of_like,
-                            'liked_post_id' => $like->liked_post_id,
-                            'user_detail' => $user ? [
-                                'full_name' => $user->full_name,
-                                'last_name' => $user->last_name,
-                                'avatar' => $user->avatar,
-                            ] : null, // Handle cases where user might not exist
-                        ];
-                    });
+            // Fetch comments for the post
+            $comments = DB::table('tintuc_post_comments')
+                ->where('post_id', $post->id)
+                ->orderBy('created_at', 'asc')
+                ->get()
+                ->map(function ($comment) {
+                    // Fetch user details for each comment
+                    $user = DB::table('c4_user')
+                        ->select('name', 'avatar', 'username')
+                        ->where('username', $comment->username)
+                        ->first();
 
-                return [
-                    'id' => $post->id,
-                    'content' => $post->content,
-                    'timeofpost' => $post->timeofpost,
-                    'image' => $post->image,
-                    'author' => $author ? [
-                        'name' => $author->name,
-                        'username' => $author->username,
-                        'verified' => $author->verified,
-                        'avatar' => $author->avatar,
-                    ] : null, // Handle cases where the author might be missing
-                    'likes' => $likes->toArray(),
-                ];
-            });
+                    return [
+                        'id' => $comment->id,
+                        'content' => $comment->content,
+                        'image' => $comment->image, // Include image in the comment
+                        'username' => $comment->username,
+                        'user' => $user ? [
+                            'name' => $user->name,
+                            'avatar' => $user->avatar,
+                        ] : null,
+                        'created_at' => $comment->created_at,
+                    ];
+                });
 
-        // Prepare the response
+            // Fetch likes for the post
+            $likes = DB::table('tintuc_post_likes')
+                ->where('liked_post_id', $post->id)
+                ->get()
+                ->map(function ($like) {
+                    $user = DB::table('c4_user')
+                        ->select('name as full_name', 'lastname as last_name', 'avatar')
+                        ->where('username', $like->liked_username)
+                        ->first();
+
+                    return [
+                        'like_id' => $like->like_id,
+                        'liked_username' => $like->liked_username,
+                        'time_of_like' => $like->time_of_like,
+                        'liked_post_id' => $like->liked_post_id,
+                        'user_detail' => $user ? [
+                            'full_name' => $user->full_name,
+                            'last_name' => $user->last_name,
+                            'avatar' => $user->avatar,
+                        ] : null,
+                    ];
+                });
+
+            return [
+                'id' => $post->id,
+                'content' => $post->content,
+                'timeofpost' => $post->timeofpost,
+                'image' => $post->image,
+                'author' => $author ? [
+                    'name' => $author->name,
+                    'username' => $author->username,
+                    'verified' => $author->verified,
+                    'avatar' => $author->avatar,
+                ] : null,
+                'likes' => $likes->toArray(),
+                'comments' => $comments->toArray(),
+            ];
+        });
+
+        // Return the response
         return response()->json([
             'code' => 200,
-            'total_items' => $totalItems,
-            'page' => (int) $page,
-            'items' => $posts,
+            'items' => $response,
+            'page' => $page,
         ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    public function addComment(Request $request)
+    {
+        // Validate the incoming request
+        $validator = Validator::make($request->all(), [
+            'post_id' => 'required|integer|exists:tintuc_posts,id',
+            'username' => 'required|string|exists:c4_user,username',
+            'content' => 'nullable|string|max:500',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:10240', // Max 10MB
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => 422,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $imageUrl = null;
+
+            // Handle image upload if provided
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+
+                // Compress image to 60%
+                $imageName = time() . '_' . $image->getClientOriginalName();
+                $imagePath = storage_path('app/public/comments/' . $imageName);
+
+                Image::make($image)
+                    ->encode('jpg', 60) // Compress to 60% quality
+                    ->save($imagePath);
+
+                $imageUrl = Storage::url('public/comments/' . $imageName);
+            }
+
+            // Insert the comment into the database
+            $comment = DB::table('tintuc_post_comments')->insertGetId([
+                'post_id' => $request->input('post_id'),
+                'username' => $request->input('username'),
+                'content' => $request->input('content'),
+                'image' => $imageUrl,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return response()->json([
+                'code' => 200,
+                'message' => 'Comment added successfully.',
+                'comment_id' => $comment,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'code' => 500,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

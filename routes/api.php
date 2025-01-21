@@ -50,6 +50,7 @@ Route::prefix('v2.0')->group(function () {
     Route::any('/feed/likes/add', [FeedController::class, 'handleLikes']);
     Route::get('/feed/likes', [FeedController::class, 'getLikes']);
     Route::any('/feed/add', [FeedController::class, 'addPost']);
+    Route::any('/feed/comments/add', [FeedController::class, 'addComment']);
 
     Route::any('/chat/conversations', [ChatController::class, 'sendMessage']);
     Route::any('/chat/messages', [ChatController::class, 'getMessages']);
