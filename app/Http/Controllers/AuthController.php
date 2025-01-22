@@ -35,7 +35,7 @@ class AuthController extends Controller
             $validatedData = $request->validate([
                 'username' => 'required|string',
                 'old_password' => 'required|string',
-                'new_password' => 'required|string|min:6',
+                'new_password' => 'required|string|min:1',
             ]);
         } catch (ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
