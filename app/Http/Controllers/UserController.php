@@ -47,7 +47,7 @@ class UserController extends Controller
         }
 
         // Replace the base URL in the avatar path
-        $avatarPath = str_replace("https://c4k60.com/", base_path() . "/", $user->avatar);
+        $avatarPath = str_replace("https://api.c4k60.com/", base_path() . "/", $user->avatar);
 
         // Check if the file exists
         if (!file_exists($avatarPath)) {
