@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
@@ -90,6 +92,45 @@ class UserController extends Controller
                 'message' => 'Username cannot be blank!',
             ], 400, [], JSON_UNESCAPED_UNICODE);
         }
+    }
+
+    public function changeAvatar(Request $request)
+    {
+        // Validate input data
+        try {
+            $validatedData = $request->validate([
+                'username' => 'required|string',
+                'avatar' => 'required|image|mimes:jpg,jpeg,png,gif|max:10240', // max 10MB
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
+
+        // Retrieve user by username
+        $user = User::where('username', $validatedData['username'])->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        // Handle avatar upload
+        $avatar = $request->file('avatar');
+        $avatarName = time() . '_' . $avatar->getClientOriginalName();
+        $avatarPath = 'avatars/' . $avatarName;
+
+        // Compress and save the image
+        $image = Image::make($avatar)->encode('jpg', 60); // Compress to 60%
+        Storage::disk('public')->put($avatarPath, (string) $image);
+
+        if (!Storage::disk('public')->exists($avatarPath)) {
+            return response()->json(['errors' => ['avatar' => ['The avatar failed to upload.']]], 422);
+        }
+
+        // Update user's avatar URL
+        $user->avatar = Storage::url($avatarPath);
+        $user->save();
+
+        return response()->json(['message' => 'Avatar updated successfully', 'avatar_url' => $user->avatar], 200);
     }
 
     public function getUserInfo(Request $request)

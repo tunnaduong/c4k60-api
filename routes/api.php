@@ -30,6 +30,7 @@ Route::prefix('v2.0')->group(function () {
 
     Route::any('/users', [UserController::class, 'getUserInfo']);
     Route::get('/users/avatar/{username}', [UserController::class, 'getAvatar']);
+    Route::get('/users/avatar/upload', [UserController::class, 'changeAvatar']);
     Route::get('/users/birthday', [BirthdayController::class, 'index']);
     Route::get('/users/list', [UserController::class, 'index']);
     Route::get('/users/online', [UserController::class, 'updateLastActivity']);
