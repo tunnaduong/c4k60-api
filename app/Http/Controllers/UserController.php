@@ -49,6 +49,11 @@ class UserController extends Controller
         // Replace the base URL in the avatar path
         $avatarPath = str_replace("https://api.c4k60.com/", base_path() . "/", $user->avatar);
 
+        // if the avatar path contains storage, then add app/public to the avatarPath
+        if (strpos($avatarPath, 'storage') !== false) {
+            $avatarPath = str_replace('storage', 'storage/app/public', $avatarPath);
+        }
+
         // Check if the file exists
         if (!file_exists($avatarPath)) {
             return response()->json(['error' => 'Avatar file not found', 'path' => $avatarPath], 404);
