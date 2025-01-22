@@ -47,22 +47,23 @@ class UserController extends Controller
         }
 
         // Replace the base URL in the avatar path
-        $avatarUrl = $user->avatar;
+        $avatarPath = str_replace("https://api.c4k60.com/", base_path() . "/", $user->avatar);
 
-        // Get the file contents
-        $fileContents = @file_get_contents($avatarUrl);
-
-        if ($fileContents === FALSE) {
-            return response()->json(['error' => 'Avatar file not found'], 404);
+        // Check if the file exists
+        if (!file_exists($avatarPath)) {
+            return response()->json(['error' => 'Avatar file not found', 'path' => $avatarPath], 404);
         }
 
-        // Get the mime type and file size
-        $mimeType = getimagesizefromstring($fileContents)['mime'];
-        $fileSize = strlen($fileContents);
+        // Open the file in binary mode and return it
+        $file = fopen($avatarPath, 'rb');
+        $fileSize = filesize($avatarPath);
 
-        return response($fileContents, 200)
-            ->header("Content-Type", $mimeType)
-            ->header("Content-Length", $fileSize);
+        return response()->stream(function () use ($file) {
+            fpassthru($file);
+        }, 200, [
+            "Content-Type" => mime_content_type($avatarPath),
+            "Content-Length" => $fileSize,
+        ]);
     }
 
     public function updateLastActivity(Request $request)
