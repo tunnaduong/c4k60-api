@@ -127,7 +127,7 @@ class UserController extends Controller
         }
 
         // Update user's avatar URL
-        $user->avatar = 'https://api.c4k60.com/' . Storage::url($avatarPath);
+        $user->avatar = 'https://api.c4k60.com' . Storage::url($avatarPath);
         $user->save();
 
         return response()->json(['message' => 'Avatar updated successfully', 'avatar_url' => $user->avatar], 200);
