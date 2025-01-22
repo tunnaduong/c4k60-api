@@ -34,6 +34,7 @@ Route::prefix('v2.0')->group(function () {
     Route::get('/users/birthday', [BirthdayController::class, 'index']);
     Route::get('/users/list', [UserController::class, 'index']);
     Route::get('/users/online', [UserController::class, 'updateLastActivity']);
+    Route::any('/users/change-password', [AuthController::class, 'changePassword']);
 
     Route::get('/radio/idle', [LiveRadioController::class, 'getIdlePlaylist']);
     Route::any('/radio/chatlogs', [LiveRadioController::class, 'handleLogs']);
