@@ -68,6 +68,8 @@ class UserController extends Controller
         }, 200, [
             "Content-Type" => mime_content_type($avatarPath),
             "Content-Length" => $fileSize,
+            "Cache-Control" => "public, max-age=300", // Cache for 5 minutes
+            "Expires" => gmdate('D, d M Y H:i:s', time() + 300) . ' GMT', // Expires in 5 minutes
         ]);
     }
 
